@@ -22,6 +22,22 @@ class InventoryController {
   });
   return back()->with('success','Stock adjusted');
  }
+ /**
+  * Replenishment proposals based on current stock and reorder thresholds.
+  * Target inventory is twice the reorder level; never proposes negative units.
+  */
+ public function reorderReport(){
+  $items=Product::whereColumn('quantity','<=','reorder_level')->orderBy('sku')->get();
+  return response()->json($items->map(function($item){
+   $target=max($item->reorder_level*2,1);
+   return [
+    'product_id'=>$item->id,'sku'=>$item->sku,'name'=>$item->name,
+    'current_quantity'=>$item->quantity,'reorder_level'=>$item->reorder_level,
+    'suggested_quantity'=>max(0,$target-$item->quantity),
+    'estimated_cost_cents'=>max(0,$target-$item->quantity)*$item->unit_cost_cents,
+   ];
+  })->values());
+ }
  public function insights(){return response()->json(['products'=>Product::count(),'low_stock'=>Product::whereColumn('quantity','<=','reorder_level')->count(),'inventory_value_cents'=>Product::selectRaw('COALESCE(SUM(quantity * unit_cost_cents),0) total')->value('total'),'stock_movements'=>StockMovement::count()]);}
 
  /**
