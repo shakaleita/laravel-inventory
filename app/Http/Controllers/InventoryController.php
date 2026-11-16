@@ -23,4 +23,25 @@ class InventoryController {
   return back()->with('success','Stock adjusted');
  }
  public function insights(){return response()->json(['products'=>Product::count(),'low_stock'=>Product::whereColumn('quantity','<=','reorder_level')->count(),'inventory_value_cents'=>Product::selectRaw('COALESCE(SUM(quantity * unit_cost_cents),0) total')->value('total'),'stock_movements'=>StockMovement::count()]);}
+
+ /**
+  * Stream a deterministic read-only CSV snapshot of the local demo dataset.
+  * Spreadsheet formula prefixes are escaped to prevent formula interpretation.
+  */
+ public function export(){
+  return response()->streamDownload(function(){
+   $handle=fopen('php://output','w');
+   fputcsv($handle, ['id','sku','name','quantity','reorder_level','unit_cost_cents'], ',', '"', '');
+   foreach(Product::orderBy('id')->cursor() as $record){
+    $row=[];
+    foreach(['id','sku','name','quantity','reorder_level','unit_cost_cents'] as $column){
+     $value=(string)($record->{$column}??'');
+     if(preg_match('/^\s*[=+\-@\t\r]/u',$value))$value="'".$value;
+     $row[]=$value;
+    }
+    fputcsv($handle,$row,',','"','');
+   }
+   fclose($handle);
+  }, 'inventory-products.csv', ['Content-Type'=>'text/csv; charset=UTF-8','Cache-Control'=>'no-store']);
+ }
 }
