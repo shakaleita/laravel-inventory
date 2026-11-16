@@ -6,3 +6,5 @@ Route::post('/products',[InventoryController::class,'store'])->name('products.st
 Route::post('/products/{product}/adjust',[InventoryController::class,'adjust'])->name('products.adjust');
 
 Route::get('/api/insights',[InventoryController::class,'insights'])->name('inventory-insights');
+
+Route::get('/api/export/inventory-products.csv',[InventoryController::class,'export'])->name('inventory-products-export');
