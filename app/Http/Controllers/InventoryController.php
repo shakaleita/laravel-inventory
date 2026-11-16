@@ -60,4 +60,17 @@ class InventoryController {
    fclose($handle);
   }, 'inventory-products.csv', ['Content-Type'=>'text/csv; charset=UTF-8','Cache-Control'=>'no-store']);
  }
+ /** Reconcile recorded stock against the append-only movement ledger. */
+ public function reconciliation(){
+    $results=Product::withSum('movements','change')->orderBy('sku')->get()->map(function($product){
+      $ledger=(int)($product->movements_sum_change??0);
+      $recorded=(int)$product->quantity;
+      return ['product_id'=>$product->id,'sku'=>$product->sku,
+        'recorded_quantity'=>$recorded,'ledger_quantity'=>$ledger,
+        'difference'=>$recorded-$ledger,'matches'=>$recorded===$ledger];
+    });
+    return response()->json(['checked'=>$results->count(),
+        'mismatched'=>$results->where('matches',false)->count(),
+        'products'=>$results->values()]);
+ }
 }
