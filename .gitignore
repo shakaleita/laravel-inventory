@@ -1,0 +1,9 @@
+/vendor/
+/node_modules/
+/storage/*.key
+/storage/logs/*
+/bootstrap/cache/*.php
+.env
+.env.*
+!.env.example
+.DS_Store
