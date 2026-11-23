@@ -4,7 +4,7 @@
   "description": "Warehouse inventory dashboard with stock adjustments, product catalogue and reorder alerts.",
   "require": {
     "php": "^8.2",
-    "laravel/framework": "^12.0"
+    "laravel/framework": "^13.43"
   },
   "autoload": {
     "psr-4": {
